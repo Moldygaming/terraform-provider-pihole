@@ -35,6 +35,9 @@ func Provider() *schema.Provider {
 				Description: "Skip TLS certificate validation for self-signed certificates.",
 			},
 		},
+		ResourcesMap: map[string]*schema.Resource{
+			"pihole_domain": resourceDomain(),
+		},
 		ConfigureContextFunc: configure,
 	}
 }
