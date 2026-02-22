@@ -17,7 +17,7 @@ variables:
   - name: gnupgVersion
     value: '2.4.3'
   - name: repoName
-    value: 'lcp-llp/terraform-provider-pihole'  # Replace with your actual GitHub org/user and repo name
+    value: 'moldygaming/terraform-provider-pihole'  # Replace with your actual GitHub org/user and repo name
   - name: secureFileName
     value: 'terra_key_private.asc'
 jobs:
