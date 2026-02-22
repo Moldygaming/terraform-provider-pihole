@@ -150,7 +150,31 @@ func (a AuthProvider) authenticateModern(ctx context.Context, client *Client) (s
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return "", fmt.Errorf("unexpected status code %d", resp.StatusCode)
+		// Try to surface the actual message Pi-hole returned (e.g. "wrong password")
+		var errBody map[string]any
+		if jsonErr := json.Unmarshal(raw, &errBody); jsonErr == nil {
+			// Pi-hole v6: error shape { "error": { "message": "..." } }
+			if errObj, ok := errBody["error"].(map[string]any); ok {
+				if msg, ok := errObj["message"].(string); ok && msg != "" {
+					return "", fmt.Errorf("status %d from %s: %s", resp.StatusCode, endpoint.String(), msg)
+				}
+			}
+			// Pi-hole v6: session shape { "session": { "message": "..." } }
+			if session, ok := errBody["session"].(map[string]any); ok {
+				if msg, ok := session["message"].(string); ok && msg != "" {
+					return "", fmt.Errorf("status %d from %s: %s", resp.StatusCode, endpoint.String(), msg)
+				}
+			}
+		}
+		// Fallback: include raw body snippet so the user can see what the server returned
+		snippet := strings.TrimSpace(string(raw))
+		if len(snippet) > 200 {
+			snippet = snippet[:200] + "..."
+		}
+		if snippet != "" {
+			return "", fmt.Errorf("unexpected status code %d from %s: %s", resp.StatusCode, endpoint.String(), snippet)
+		}
+		return "", fmt.Errorf("unexpected status code %d from %s", resp.StatusCode, endpoint.String())
 	}
 
 	var decoded map[string]any
@@ -165,6 +189,9 @@ func (a AuthProvider) authenticateModern(ctx context.Context, client *Client) (s
 		}
 		// session object present but no sid — likely invalid credentials
 		if valid, ok := session["valid"].(bool); ok && !valid {
+			if msg, ok := session["message"].(string); ok && msg != "" {
+				return "", fmt.Errorf("modern auth rejected: %s", msg)
+			}
 			return "", errors.New("modern auth rejected: invalid credentials")
 		}
 	}
@@ -204,16 +231,24 @@ func (a AuthProvider) authenticateLegacy(ctx context.Context, client *Client) er
 	}
 
 	body := strings.ToLower(strings.TrimSpace(string(raw)))
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		snippet := body
+		if len(snippet) > 200 {
+			snippet = snippet[:200] + "..."
+		}
+		if snippet != "" {
+			return fmt.Errorf("unexpected status code %d from %s: %s", resp.StatusCode, endpoint.String(), snippet)
+		}
+		return fmt.Errorf("unexpected status code %d from %s", resp.StatusCode, endpoint.String())
+	}
+
 	if strings.Contains(body, "\"status\":\"enabled\"") || strings.Contains(body, "\"status\":\"success\"") {
 		return nil
 	}
 
 	if strings.Contains(body, "invalid") || strings.Contains(body, "unauthorized") {
 		return errors.New("invalid password")
-	}
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("unexpected status code %d", resp.StatusCode)
 	}
 
 	if body == "" {
