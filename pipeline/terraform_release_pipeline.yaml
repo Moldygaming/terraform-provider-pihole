@@ -37,7 +37,7 @@ jobs:
 
     - script: |
         sudo apt-get update
-        sudo apt-get install -y wget build-essential libbz2-dev zlib1g-dev libsqlite3-dev libssl-dev libreadline-dev libffi-dev
+        sudo apt-get install -y wget build-essential libbz2-dev zlib1g-dev libsqlite3-dev libssl-dev libreadline-dev libffi-dev zip
         sudo apt-get install -y libassuan-dev libnpth0-dev
       displayName: 'Install Dependencies'
 
