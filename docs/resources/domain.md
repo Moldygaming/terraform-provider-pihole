@@ -11,20 +11,20 @@ Manages a Pi-hole domain entry.
 
 ## Example Usage
 
-resource "pihole_domain" "deny_ads" {
-  domain  = "doubleclick.net"
-  type    = "deny"
-  kind    = "exact"
-  comment = "Blocked ad domain"
-  groups  = [0]
-  enabled = true
-}
+    resource "pihole_domain" "deny_ads" {
+      domain  = "doubleclick.net"
+      type    = "deny"
+      kind    = "exact"
+      comment = "Blocked ad domain"
+      groups  = [0]
+      enabled = true
+    }
 
-resource "pihole_domain" "allow_regex" {
-  domain = "(^|\\.)example\\.org$"
-  type   = "allow"
-  kind   = "regex"
-}
+    resource "pihole_domain" "allow_regex" {
+      domain = "(^|\\.)example\\.org$"
+      type   = "allow"
+      kind   = "regex"
+    }
 
 ## Schema
 

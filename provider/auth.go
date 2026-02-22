@@ -158,7 +158,19 @@ func (a AuthProvider) authenticateModern(ctx context.Context, client *Client) (s
 		return "", fmt.Errorf("invalid auth response: %w", err)
 	}
 
-	for _, key := range []string{"session", "sid", "token", "api_token"} {
+	// Pi-hole v6: token is nested inside the "session" object as "sid"
+	if session, ok := decoded["session"].(map[string]any); ok {
+		if sid, ok := session["sid"].(string); ok && strings.TrimSpace(sid) != "" {
+			return sid, nil
+		}
+		// session object present but no sid — likely invalid credentials
+		if valid, ok := session["valid"].(bool); ok && !valid {
+			return "", errors.New("modern auth rejected: invalid credentials")
+		}
+	}
+
+	// Fallback: check top-level string fields for older API shapes
+	for _, key := range []string{"sid", "token", "api_token"} {
 		if value, ok := decoded[key].(string); ok && strings.TrimSpace(value) != "" {
 			return value, nil
 		}

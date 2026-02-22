@@ -11,12 +11,12 @@ Use the Pi-hole provider to manage domain allow/deny rules in Pi-hole.
 
 ## Example Usage
 
-provider "pihole" {
-  hostname        = "https://10.0.10.10"
-  port            = 443
-  password        = var.pihole_password
-  skip_tls_verify = true
-}
+    provider "pihole" {
+      hostname        = "https://10.0.10.10"
+      port            = 443
+      password        = var.pihole_password
+      skip_tls_verify = true
+    }
 
 ## Schema
 
