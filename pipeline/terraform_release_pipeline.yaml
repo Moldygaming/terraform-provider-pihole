@@ -9,7 +9,7 @@ trigger:
 pool: 'Default'
 
 variables:
-  - group: 'Automation.TerraformProviders'
+  - group: 'TerraformProviders'
   - name: terraformVersion 
     value: '1.14.0'
   - name: providerName
